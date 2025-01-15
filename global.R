@@ -1,7 +1,5 @@
 library(shiny)
 
-clean_data2_subset <- readRDS("clean_data2_subset.rds")
-
 selected_vars <- c(
   "sex",
   "age",
