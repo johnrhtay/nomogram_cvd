@@ -1,5 +1,4 @@
 # set wd first
-# setwd("C:/Users/johnt/Dropbox/John/Nomogram and Life8/NomogramCVD/external validation code/my shiny app")
 # runApp()
 
 
