@@ -10,7 +10,7 @@ Smoking Status: Never/Current/Former
 Cholesterol: Yes/No
 Diabetes Mellitus: Yes/No
 Hypertension Treatment: Yes/No
-Periodontitis Classification: None, Stage III, Stage IV, Edentulous
+Periodontitis Classification: Other, Stage III, Stage IV, Edentulous
 
 ## Features
 
