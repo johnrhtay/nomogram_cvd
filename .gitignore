@@ -1,0 +1,51 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+.RDataTmp
+
+# User-specific files
+.Ruserdata
+
+# Shiny-specific files
+rsconnect/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+*.temp
+*.~*
+
+# Log files
+*.log
+*.out
+*.log.*
+
+# Exclude R Markdown cache
+*_cache/
+*.utf8.md
+*.knit.md
+
+# Backup and lock files
+*.lock
+*.bak
+
+# System-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE-specific files
+.Rproj.user/
+.Rproj/
+
+# Exclude datasets or sensitive data 
+*.rds
+*.csv
+*.xlsx
+*.sav
+*.tsv
