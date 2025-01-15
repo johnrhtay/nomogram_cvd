@@ -18,7 +18,7 @@ Periodontitis Classification: None, Stage III, Stage IV, Edentulous
 - **Predictive Analysis**: Calculate and display the probability of CVD for user-specified inputs.
 
 
-##Access the Application
+## Access the Application
 
 The Shiny app is hosted online and can be accessed here:
 https://36shuc-john-tay.shinyapps.io/Nomogram/ 
