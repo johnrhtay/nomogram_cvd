@@ -5,7 +5,6 @@ selected_vars <- c(
   "age",
   "Nicotine",
   "Cholesterol",
-  "DM",
   "BPQ050A",
   "ACES_with_complexity_combined"
 )
