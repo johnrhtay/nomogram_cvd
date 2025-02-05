@@ -19,7 +19,6 @@ function(input, output, session) {
       age = input$age,
       Nicotine = factor(input$Nicotine, levels = c("Never", "Current", "Former")),
       Cholesterol = factor(input$Cholesterol, levels = c("No", "Yes")),
-      DM = factor(input$DM, levels = c("No", "Yes")),
       BPQ050A = factor(input$BPQ050A, levels = c("No", "Yes")),
       ACES_with_complexity_combined = factor(input$ACES_with_complexity_combined, 
                                              levels = c("Other", "Stage III", "Stage IV", "Edentulous"))
