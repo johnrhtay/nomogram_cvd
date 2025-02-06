@@ -1,0 +1,126 @@
+library(ResourceSelection)  # Hosmer-Lemeshow test
+library(rms)               
+library(boot)            
+library(DescTools)        
+library(pROC)              
+
+# Define predictor variables
+selected_vars <- c("sex", "age", "smoking", "cholesterol", "hypertension", "perio")
+
+# Assign custom labels
+label(clean_data2_subset$sex) <- "Sex"
+label(clean_data2_subset$age) <- "Age"
+label(clean_data2_subset$smoking) <- "Smoking"
+label(clean_data2_subset$cholesterol) <- "Cholesterol"
+label(clean_data2_subset$hypertension) <- "Hypertension Treatment"
+label(clean_data2_subset$perio) <- "Periodontal Status"
+
+# Define data distribution for 'rms' functions
+dd <- datadist(clean_data2_subset[, selected_vars])
+options(datadist = "dd")
+
+# Fit model
+multivariable_formula <- as.formula(
+  paste("CVD ~", paste(selected_vars, collapse = " + "))
+)
+
+nom_model <- lrm(
+  formula = multivariable_formula,
+  data = clean_data2_subset,
+  x = TRUE,
+  y = TRUE
+)
+
+# Generate nomogram
+nom <- nomogram(
+  nom_model,
+  fun = plogis,
+  fun.at = c(0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95),
+  lp = FALSE,
+  funlabel = "Probability of CVD",
+  maxscale = 40
+)
+
+par(mar = c(2, 2, 1, 1))  
+plot(
+  nom,
+  xfrac = 0.1,    
+  cex.var = 0.7,  
+  cex.axis = 0.7,  
+  cex.main = 1,   
+  lineheight = 1,  
+  main = "Nomogram for Identifying CVD"
+)
+
+# OR for nomogram
+clean_data2_subset$nomogram_score <- predict(nom_model, type = "lp")
+
+logit_model <- glm(CVD ~ nomogram_score, data = clean_data2_subset, family = binomial)
+
+or <- exp(coef(logit_model)["nomogram_score"])
+ci <- exp(confint(logit_model)["nomogram_score", ])
+
+cat(sprintf("Odds Ratio (OR): %.3f\n", or))
+cat(sprintf("95%% CI: %.3f - %.3f\n", ci[1], ci[2]))
+
+saveRDS(clean_data2_subset, "clean_data2_subset.rds")
+
+
+# Goodness-of-Fit (Hosmer-Lemeshow Test)
+observed <- clean_data2_subset$CVD
+fitted_probs <- predict(nom_model, newdata = clean_data2_subset, type = "response")
+
+hoslem_test <- hoslem.test(observed, fitted_probs, g = 10)
+print("Hosmer-Lemeshow Test Results:")
+print(hoslem_test)
+
+# Brier score
+brier_score <- BrierScore(nom_model)
+cat(sprintf("Brier Score: %.4f\n", brier_score))
+
+
+# Calibration Curve (Bootstrap)
+cal <- calibrate(nom_model, method = "boot", B = 1000)
+
+plot(
+  cal,
+  xlab = "Predicted Probability of CVD",
+  ylab = "Actual Probability of CVD",
+  subtitle = FALSE,
+  main = "Calibration Curve for CVD Prediction Model"
+)
+
+val_new <- validate(nom_model, B = 1000)
+
+slope <- val_new["Slope", "index.corrected"]
+intercept <- val_new["Intercept", "index.corrected"]
+
+cat(sprintf("Intercept of bias-corrected calibration curve: %.3f\n", intercept))
+cat(sprintf("Slope of bias-corrected calibration curve: %.3f\n", slope))
+
+# Bootstrap AUC 
+bootstrap_auc <- function(data, indices) {
+  d <- data[indices, ]
+  
+  model <- glm(CVD ~ sex + age + Nicotine + Cholesterol + BPQ050A + ACES_with_complexity_combined,
+               data = d, family = binomial)
+  
+  preds <- predict(model, newdata = data, type = "response")
+  auc(data$CVD, preds)
+}
+
+set.seed(910)
+boot_results <- boot(data = clean_data2_subset, statistic = bootstrap_auc, R = 1000)
+
+bootstrap_aucs <- boot_results$t  
+average_bootstrap_auc <- mean(bootstrap_aucs, na.rm = TRUE)
+sd_bootstrap_auc <- sd(bootstrap_aucs, na.rm = TRUE)
+
+cat(sprintf("Average Bootstrap AUC: %.4f\n", average_bootstrap_auc))
+cat(sprintf("Standard Deviation of Bootstrap AUCs: %.4f\n", sd_bootstrap_auc))
+
+# 95% CI for Bootstrap AUC
+ci_lower <- quantile(bootstrap_aucs, probs = 0.025, na.rm = TRUE)
+ci_upper <- quantile(bootstrap_aucs, probs = 0.975, na.rm = TRUE)
+
+cat(sprintf("95%% Confidence Interval for Bootstrap AUC: [%.4f, %.4f]\n", ci_lower, ci_upper))
