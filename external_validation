@@ -1,0 +1,34 @@
+
+library(dplyr)
+library(Hmisc)  
+
+# Define predictor variables from external validation dataset
+selected_vars_external <- c("sex", "age", "smoking", "hypertension", "cholesterol", "peroi")  
+
+# Generate predicted probabilities using the final model
+selected_vars_external$predicted_prob <- predict(final_model, newdata = selected_vars_external, type = "response")
+
+# Extract predicted probabilities and observed outcomes
+p <- as.numeric(selected_vars_external$predicted_prob)
+y <- as.numeric(selected_vars_external$CVD)
+
+# -------------------- Calibration Curve --------------------
+
+tiff(filename = "Calibration_External_Validation.tif",
+     width = 600, height = 600, units = "px",
+     pointsize = 4, bg = "white", res = 300)
+
+# Plot Calibration Curve
+val.prob(
+  p = p,                              
+  y = y,                              
+  pl = TRUE,                         
+  smooth = TRUE,                     
+  xlab = "Predicted Probability of CVD", 
+  ylab = "Observed Probability of CVD",   
+  statloc = NA                       
+)
+
+title(main = "Calibration Curve for External Validation")
+
+dev.off()
