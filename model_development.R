@@ -2,6 +2,8 @@ library(tidyverse)
 library(broom)
 library(car)
 library(pROC)
+library(PRROC)
+library(boot)
 library(MASS)
 
 # Recode CVD outcome
@@ -104,6 +106,35 @@ cat(sprintf(
   "Optimal Cutoff: %.2f, Sensitivity: %.2f, Specificity: %.2f\n",
   optimal_cutoff, sensitivity, specificity
 ))
+
+
+# Compute AUPRC
+
+# AUPRC function 
+auprc_function <- function(data, indices) {
+  sampled_data <- data[indices, ]  # Resample data
+  pr_obj <- pr.curve(scores.class0 = sampled_data$predicted_prob,
+                     weights.class0 = sampled_data$CVD, curve = FALSE)
+  return(pr_obj$auc.integral)
+}
+
+# Bootstrap AUPRC to get 95% CI
+set.seed(1122)  
+boot_results <- boot(data = clean_data2_subset, statistic = auprc_function, R = 1000) 
+
+ci_95 <- boot.ci(boot_results, type = "perc")$percent[4:5]
+
+# Print AUPRC with 95% CI
+auprc_value <- round(boot_results$t0, 4)
+ci_lower <- round(ci_95[1], 4)
+ci_upper <- round(ci_95[2], 4)
+
+print(paste("AUPRC of the logistic regression model:", 
+            auprc_value, 
+            "(95% CI:", ci_lower, "-", ci_upper, ")"))
+
+
+
 
 # Compute AUC for individual predictors
 vars_to_check <- c("sex", "age", "smoking", "hypertension", "cholesterol", "DM", "perio")
