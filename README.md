@@ -21,4 +21,4 @@ Periodontitis Classification: Other, Stage III, Stage IV, Edentulous
 ## Access the Application
 
 The Shiny app is hosted online and can be accessed here:
-https://36shuc-john-tay.shinyapps.io/Nomogram/ 
+https://36shuc-john-tay.shinyapps.io/Nomogram-CVD/ 
