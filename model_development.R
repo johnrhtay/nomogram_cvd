@@ -52,24 +52,6 @@ final_model_aic <- stepAIC(multivariable_model, direction = "backward", trace = 
 # Perform Selection - BIC
 final_model_bic <- stepAIC(multivariable_model, direction = "backward", k = log(nrow(clean_data2)), trace = TRUE)
 
-# Compare AIC & BIC 
-aic_base <- AIC(multivariable_model)  
-aic_selected <- AIC(final_model_aic)
-bic_base <- BIC(multivariable_model)
-bic_selected <- BIC(final_model_bic)
-
-cat("AIC (Base Model):", aic_base, "\n")
-cat("AIC (Final Model):", aic_selected, "\n")
-cat("ΔAIC:", aic_selected - aic_base, "\n")
-
-cat("BIC (Base Model):", bic_base, "\n")
-cat("BIC (Final Model):", bic_selected, "\n")
-cat("ΔBIC:", bic_selected - bic_base, "\n")
-
-# Likelihood ratiotTest (LRT) 
-model_A <- glm(CVD ~ sex + age + smoking + hyptension + cholesterol, family = binomial, data = clean_data2)
-model_B <- glm(CVD ~ sex + age + smoking + hyptension + cholesterol + perio, family = binomial, data = clean_data2)
-
 lr_test <- anova(model_A, model_B, test = "Chisq")
 print(lr_test)
 
@@ -136,32 +118,4 @@ print(paste("AUPRC of the logistic regression model:",
 
 
 
-# Compute AUC for individual predictors
-vars_to_check <- c("sex", "age", "smoking", "hypertension", "cholesterol", "DM", "perio")
 
-single_var_auc_ci <- function(var) {
-  formula <- as.formula(paste("CVD ~", var))
-  model <- glm(formula, data = clean_data2, family = binomial)
-  
-  clean_data2_subset <- clean_data2 %>%
-    dplyr::select(CVD, all_of(var)) %>%
-    drop_na()
-  
-  clean_data2_subset$predicted_prob <- predict(model, newdata = clean_data2_subset, type = "response")
-  
-  roc_obj <- roc(clean_data2_subset$CVD, clean_data2_subset$predicted_prob)
-  
-  auc_value <- auc(roc_obj)
-  auc_ci <- ci.auc(roc_obj)
-  
-  return(data.frame(
-    Variable = var,
-    AUC = round(as.numeric(auc_value), 4),
-    Lower_CI = round(auc_ci[1], 4),
-    Upper_CI = round(auc_ci[3], 4)
-  ))
-}
-
-single_var_results <- do.call(rbind, lapply(vars_to_check, single_var_auc_ci))
-
-print(single_var_results)
